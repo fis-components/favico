@@ -2,7 +2,7 @@
  * @license MIT
  * @fileOverview Favico animations
  * @author Miroslav Magda, http://blog.ejci.net
- * @version 0.3.9
+ * @version 0.3.10
  */
 /**
  * Create new favico instance
@@ -96,7 +96,6 @@
             _img = document.createElement('img');
             if (_orig.hasAttribute('href')) {
                 _img.setAttribute('crossOrigin', 'anonymous');
-                _img.setAttribute('src', _orig.getAttribute('href'));
                 //get width/height
                 _img.onload = function () {
                     _h = _img.height > 0 ? _img.height : 32;
@@ -106,16 +105,19 @@
                     _context = _canvas.getContext('2d');
                     icon.ready();
                 };
+                _img.setAttribute('src', _orig.getAttribute('href'));
             } else {
+                _img.onload = function () {
+                    _h = 32;
+                    _w = 32;
+                    _img.height = _h;
+                    _img.width = _w;
+                    _canvas.height = _h;
+                    _canvas.width = _w;
+                    _context = _canvas.getContext('2d');
+                    icon.ready();
+                };
                 _img.setAttribute('src', '');
-                _h = 32;
-                _w = 32;
-                _img.height = _h;
-                _img.width = _w;
-                _canvas.height = _h;
-                _canvas.width = _w;
-                _context = _canvas.getContext('2d');
-                icon.ready();
             }
         };
         /**
@@ -349,12 +351,14 @@
                     var newImg = document.createElement('img');
                     var ratio = w / _w < h / _h ? w / _w : h / _h;
                     newImg.setAttribute('crossOrigin', 'anonymous');
+                    newImg.onload = function () {
+                        _context.clearRect(0, 0, _w, _h);
+                        _context.drawImage(newImg, 0, 0, _w, _h);
+                        link.setIcon(_canvas);
+                    };
                     newImg.setAttribute('src', imageElement.getAttribute('src'));
                     newImg.height = h / ratio;
                     newImg.width = w / ratio;
-                    _context.clearRect(0, 0, _w, _h);
-                    _context.drawImage(newImg, 0, 0, _w, _h);
-                    link.setIcon(_canvas);
                 } catch (e) {
                     throw new Error('Error setting image. Message: ' + e.message);
                 }
@@ -445,7 +449,9 @@
                 _context.drawImage(video, 0, 0, _w, _h);
             } catch (e) {
             }
-            _drawTimeout = setTimeout(drawVideo, animation.duration, video);
+            _drawTimeout = setTimeout(function () {
+                drawVideo(video);
+            }, animation.duration);
             link.setIcon(_canvas);
         }
         var link = {};
